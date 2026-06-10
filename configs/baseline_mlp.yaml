@@ -1,0 +1,27 @@
+seed: 19
+device: cpu
+output_dir: outputs/baseline_mlp
+dataset:
+  name: angular
+  num_samples: 48
+  num_nodes: 6
+  position_scale: 1.0
+  mass_range: [0.5, 1.5]
+  lambda_angle: 0.35
+  sigma2: 1.2
+  sigma3: 1.7
+  seed: 19
+model:
+  name: coord_mlp
+  scalar_input_dim: 1
+  num_nodes: 6
+  hidden_dim: 96
+  num_layers: 3
+training:
+  batch_size: 6
+  epochs: 2
+  lr: 0.001
+  weight_decay: 0.0001
+  val_fraction: 0.2
+  test_fraction: 0.2
+  max_steps_per_epoch: 4

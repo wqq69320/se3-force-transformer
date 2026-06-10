@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "se3-force-transformer"
+version = "0.1.0"
+description = "Irrep-based SE(3)-Transformer for 3D force field prediction"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "torch>=2.2",
+  "numpy",
+  "pyyaml",
+  "pytest",
+  "matplotlib",
+  "tqdm",
+  "e3nn>=0.6.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"

@@ -1,0 +1,37 @@
+seed: 59
+device: cpu
+output_dir: outputs/ablation_no_gate
+dataset:
+  name: angular
+  num_samples: 36
+  num_nodes: 6
+  position_scale: 1.0
+  mass_range: [0.5, 1.5]
+  lambda_angle: 0.35
+  sigma2: 1.2
+  sigma3: 1.7
+  seed: 59
+model:
+  name: se3_transformer
+  scalar_input_dim: 1
+  lmax: 2
+  channels_by_l:
+    0: 16
+    1: 8
+    2: 4
+  num_layers: 2
+  num_heads: 2
+  num_query_channels: 8
+  radial_num_basis: 10
+  radial_hidden_dim: 40
+  dropout: 0.0
+  use_attention: true
+  use_gate: false
+training:
+  batch_size: 6
+  epochs: 1
+  lr: 0.001
+  weight_decay: 0.0001
+  val_fraction: 0.2
+  test_fraction: 0.2
+  max_steps_per_epoch: 3
