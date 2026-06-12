@@ -1,0 +1,26 @@
+seed: 61
+device: cpu
+output_dir: outputs/baseline_egnn_matched_params
+dataset:
+  name: angular
+  num_samples: 48
+  num_nodes: 6
+  position_scale: 1.0
+  mass_range: [0.5, 1.5]
+  lambda_angle: 0.35
+  sigma2: 1.2
+  sigma3: 1.7
+  seed: 61
+model:
+  name: egnn
+  scalar_input_dim: 1
+  hidden_dim: 120
+  num_layers: 4
+training:
+  batch_size: 6
+  epochs: 2
+  lr: 0.001
+  weight_decay: 0.0001
+  val_fraction: 0.2
+  test_fraction: 0.2
+  max_steps_per_epoch: 4

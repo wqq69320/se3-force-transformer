@@ -15,6 +15,8 @@ from se3force.training.checkpointing import load_checkpoint
 from se3force.training.logging import write_json
 from se3force.training.losses import force_mse_loss
 
+from .metrics_schema import standard_metrics
+
 
 @torch.no_grad()
 def evaluate_model(model, loader, device="cpu") -> dict:
@@ -51,9 +53,20 @@ def evaluate_model(model, loader, device="cpu") -> dict:
 def evaluate_checkpoint(config: dict, checkpoint_path: str | Path, output_path: str | Path | None = None) -> dict:
     device = torch.device(config.get("device", "cpu"))
     model = build_model(config).to(device)
-    load_checkpoint(checkpoint_path, model=model, map_location=device)
+    checkpoint = load_checkpoint(checkpoint_path, model=model, map_location=device)
     loaders = build_dataloaders(config)
-    metrics = evaluate_model(model, loaders["test"], device=device)
+    eval_metrics = evaluate_model(model, loaders["test"], device=device)
+    train_row = checkpoint.get("metrics", {})
+    final_train_loss = train_row.get("train", {}).get("loss", checkpoint.get("final_train_loss"))
+    best_val_mse = train_row.get("val", {}).get("mse", checkpoint.get("best_val_mse"))
+    metrics = standard_metrics(
+        config=config,
+        loaders=loaders,
+        best_checkpoint=checkpoint_path,
+        final_train_loss=final_train_loss,
+        best_val_mse=best_val_mse,
+        eval_metrics=eval_metrics,
+    )
     if output_path is None:
         output_path = Path(config.get("output_dir", "outputs/run")) / "eval_metrics.json"
     write_json(output_path, metrics)

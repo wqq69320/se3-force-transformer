@@ -2,6 +2,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import os
+
+Path("outputs/.mplconfig").mkdir(parents=True, exist_ok=True)
+Path("outputs/.cache").mkdir(parents=True, exist_ok=True)
+os.environ["MPLCONFIGDIR"] = str(Path("outputs/.mplconfig").resolve())
+os.environ["XDG_CACHE_HOME"] = str(Path("outputs/.cache").resolve())
+os.environ["MPLBACKEND"] = "Agg"
+
 import matplotlib.pyplot as plt
 
 

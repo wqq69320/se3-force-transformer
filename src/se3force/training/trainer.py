@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from se3force.data import build_dataloaders
 from se3force.models.common import build_model, to_device
-from se3force.training.checkpointing import save_checkpoint
+from se3force.training.checkpointing import load_checkpoint, save_checkpoint
 from se3force.training.logging import write_json
 from se3force.training.losses import force_mse_loss
 from se3force.training.seed import set_seed
@@ -17,7 +17,10 @@ from se3force.training.seed import set_seed
 
 def load_config(path: str | Path) -> dict:
     with open(path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        config = yaml.safe_load(f)
+    config["_config_path"] = str(path)
+    config.setdefault("config_name", Path(path).name)
+    return config
 
 
 def train_one_epoch(model, loader, optimizer, device, max_steps: int | None = None) -> dict:
@@ -55,6 +58,9 @@ def evaluate_loader(model, loader, device) -> dict:
 
 
 def train_from_config(config: dict) -> dict:
+    from se3force.evaluation.evaluate import evaluate_model
+    from se3force.evaluation.metrics_schema import standard_metrics
+
     set_seed(int(config.get("seed", 0)))
     device = torch.device(config.get("device", "cpu"))
     output_dir = Path(config.get("output_dir", "outputs/run"))
@@ -87,7 +93,16 @@ def train_from_config(config: dict) -> dict:
             save_checkpoint(best_path, model, optimizer, epoch, row, config)
         print(f"epoch={epoch} train_loss={train_metrics['loss']:.6g} val_mse={val_metrics['mse']:.6g}")
 
-    test_metrics = evaluate_loader(model, loaders["test"], device)
-    metrics = {"history": history, "test": test_metrics, "best_checkpoint": str(best_path), "last_checkpoint": str(last_path)}
+    load_checkpoint(best_path, model=model, map_location=device)
+    eval_metrics = evaluate_model(model, loaders["test"], device=device)
+    metrics = standard_metrics(
+        config=config,
+        loaders=loaders,
+        best_checkpoint=best_path,
+        final_train_loss=history[-1]["train"]["loss"],
+        best_val_mse=best_val,
+        eval_metrics=eval_metrics,
+        extra={"history": history, "last_checkpoint": str(last_path)},
+    )
     write_json(output_dir / "metrics.json", metrics)
     return metrics

@@ -5,6 +5,8 @@ from e3nn import o3
 from torch import nn
 
 from se3force.geometry.irreps import build_hidden_irreps
+from se3force.models.edge_graph import aggregate_to_nodes, dense_edges
+from se3force.models.radial import GaussianRadialBasis
 
 from .se3_transformer_block import SE3TransformerBlock
 
@@ -63,6 +65,16 @@ class SE3ForceTransformer(nn.Module):
             ]
         )
         self.force_head = o3.Linear(self.irreps_hidden, o3.Irreps("1x1o"))
+        if self.force_head.weight_numel == 0:
+            self.force_radial_basis = GaussianRadialBasis(radial_num_basis)
+            self.force_edge_mlp = nn.Sequential(
+                nn.Linear(2 * self.irreps_hidden.dim + radial_num_basis, radial_hidden_dim),
+                nn.SiLU(),
+                nn.Linear(radial_hidden_dim, 1),
+            )
+        else:
+            self.force_radial_basis = None
+            self.force_edge_mlp = None
 
     def forward(self, x: torch.Tensor, z: torch.Tensor) -> torch.Tensor:
         B, N, _ = x.shape
@@ -75,4 +87,13 @@ class SE3ForceTransformer(nn.Module):
             offset += width
         for block in self.blocks:
             features = block(x, features)
-        return self.force_head(features)
+        if self.force_edge_mlp is None:
+            return self.force_head(features)
+
+        edges = dense_edges(x)
+        hi = features[edges.batch, edges.dst]
+        hj = features[edges.batch, edges.src]
+        radial = self.force_radial_basis(edges.distances)
+        weights = self.force_edge_mlp(torch.cat([hi, hj, radial], dim=-1))
+        force_messages = weights * edges.edge_vec
+        return aggregate_to_nodes(force_messages, edges) / max(1, x.shape[1] - 1)

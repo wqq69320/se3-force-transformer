@@ -1,0 +1,35 @@
+seed: 0
+device: cpu
+output_dir: outputs/scale_synthetic_angular_hard
+dataset:
+  name: scale_synthetic
+  molecule: synthetic_angular_hard
+  num_frames: 24
+  num_atoms: 12
+  variable_atoms: true
+  min_atoms: 8
+  train_size: 14
+  val_size: 5
+  test_size: 5
+  cutoff_radius: 4.0
+  sigma2: 0.9
+  lambda_angle: 0.5
+  seed: 0
+model:
+  name: se3_transformer
+  lmax: 2
+  channels_by_l:
+    0: 48
+  num_layers: 3
+  radial_num_basis: 10
+  radial_hidden_dim: 48
+training:
+  mode: direct_force
+  batch_size: 2
+  epochs: 1
+  lr: 0.001
+  weight_decay: 0.0001
+  lambda_force: 1.0
+  lambda_energy: 0.0
+  gradient_clip: 1.0
+  max_steps_per_epoch: 2

@@ -1,0 +1,25 @@
+from __future__ import annotations
+
+MOLECULAR_REQUIRED_FIELDS = [
+    "num_atoms_mean",
+    "num_atoms_max",
+    "configuration_dim_mean",
+    "force_dim_mean",
+    "cutoff_radius",
+    "edge_count_mean",
+    "edge_count_max",
+    "average_neighbors",
+    "graph_build_time_sec",
+    "force_mae",
+    "force_rmse",
+    "rotated_force_mae",
+    "energy_mae",
+    "energy_rmse",
+    "energy_invariance_error",
+    "force_unit",
+    "energy_unit",
+    "training_mode",
+    "molecule_name",
+    "num_frames_total",
+    "split_type",
+]

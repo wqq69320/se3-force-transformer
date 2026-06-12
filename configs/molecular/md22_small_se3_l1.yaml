@@ -1,0 +1,28 @@
+seed: 0
+device: cpu
+output_dir: outputs/md22_small_se3_l1
+dataset:
+  name: md22
+  molecule: md22_small
+  path: data/md22/small.npz
+  train_size: 64
+  val_size: 16
+  test_size: 16
+  cutoff_radius: 5.0
+model:
+  name: se3_transformer
+  lmax: 1
+  channels_by_l:
+    0: 96
+  num_layers: 3
+  radial_num_basis: 12
+  radial_hidden_dim: 64
+training:
+  mode: direct_force
+  batch_size: 2
+  epochs: 5
+  lr: 0.001
+  weight_decay: 0.0001
+  lambda_force: 1.0
+  lambda_energy: 0.0
+  gradient_clip: 1.0
