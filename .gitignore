@@ -48,8 +48,6 @@ datasets/
 *.pth
 
 .gitignore
-AGENTS.md
-GOAL.md
 outputs/
 data/rmd17/
 *.mp4
