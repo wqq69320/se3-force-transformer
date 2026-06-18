@@ -29,8 +29,8 @@ class TFNConv(nn.Module):
         self.tp = o3.FullyConnectedTensorProduct(self.irreps_in, self.irreps_sh, self.irreps_out, shared_weights=False)
         self.radial = RadialMLP(radial_num_basis, radial_hidden_dim, self.tp.weight_numel)
 
-    def forward(self, x: torch.Tensor, features: torch.Tensor) -> torch.Tensor:
-        edges = dense_edges(x)
+    def forward(self, x: torch.Tensor, features: torch.Tensor, edges=None) -> torch.Tensor:
+        edges = dense_edges(x) if edges is None else edges
         sh = o3.spherical_harmonics(self.irreps_sh, edges.edge_vec, normalize=True, normalization="component")
         weights = self.radial(edges.distances)
         src_features = features[edges.batch, edges.src]

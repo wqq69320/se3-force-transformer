@@ -194,6 +194,47 @@ Run a synthetic scale sweep:
 python3 scripts/run_scale_sweep.py --configs configs/molecular/scale_synthetic_n8.yaml configs/molecular/scale_synthetic_n12.yaml --seeds 0 --output outputs/scale_synthetic_smoke
 ```
 
+Run a tiny local rMD17-style real-data benchmark:
+
+```bash
+python3 scripts/run_molecular_real_benchmark.py \
+  --configs \
+    configs/molecular/real/rmd17_tiny_direct_egnn.yaml \
+    configs/molecular/real/rmd17_tiny_direct_tfn.yaml \
+    configs/molecular/real/rmd17_tiny_direct_se3.yaml \
+    configs/molecular/real/rmd17_tiny_energy_force_se3.yaml \
+  --data-path data/rmd17/aspirin.npz \
+  --molecule aspirin \
+  --seeds 0 1 2 \
+  --max-frames 1000 \
+  --output outputs/rmd17_aspirin_tiny_seed3
+```
+
+CLI overrides for molecular scripts include `--data-path`, `--molecule`, `--output`, `--seed`, `--max-frames`, `--split-type`, and `--device`. `SE3FORCE_MOLECULAR_DATA_PATH` may also provide the dataset path when `--data-path` is omitted.
+
+Run a cutoff sweep and generate real-data plots/report:
+
+```bash
+python3 scripts/run_cutoff_sweep.py \
+  --config configs/molecular/real/rmd17_tiny_direct_se3.yaml \
+  --cutoffs 3 5 7 \
+  --seeds 0 1 2 \
+  --data-path data/rmd17/aspirin.npz \
+  --molecule aspirin \
+  --max-frames 1000 \
+  --output outputs/rmd17_aspirin_cutoff_sweep
+
+python3 scripts/plot_molecular_real_results.py \
+  --input outputs/rmd17_aspirin_tiny_seed3/summary_mean_std.csv \
+  --output outputs/rmd17_aspirin_tiny_seed3/plots
+
+python3 scripts/make_molecular_real_report.py \
+  --input outputs/rmd17_aspirin_tiny_seed3/summary_mean_std.csv \
+  --output outputs/rmd17_aspirin_tiny_seed3/research_report.md \
+  --data-path data/rmd17/aspirin.npz \
+  --molecule aspirin
+```
+
 Run a demo:
 
 ```bash
@@ -201,5 +242,145 @@ python3 scripts/demo_structure_relaxation.py --config configs/molecular/scale_sy
 ```
 
 See [SCALEUP.md](SCALEUP.md), [MOLECULAR_DATA.md](MOLECULAR_DATA.md), and [SCIENTIFIC_DEMO.md](SCIENTIFIC_DEMO.md).
+
+## Visualization
+
+Phase 14.5 adds local visualization artifacts for SE(3)-equivariant molecular force prediction. These visuals are qualitative aids for inspecting 3D geometry and force-vector transformations; quantitative claims still come from metrics CSVs and equivariance tests.
+
+Export one rMD17 aspirin frame to JSON and NPZ:
+
+```bash
+python3 scripts/export_visualization_sample.py \
+  --data-path data/rmd17/rmd17_aspirin.npz \
+  --molecule aspirin \
+  --frame-index 0 \
+  --output outputs/visuals/data/aspirin_frame_000_visualization
+```
+
+If SE3 or PaiNN-lite checkpoints are available, pass `--se3-checkpoint --se3-config` or `--painn-checkpoint --painn-config`. Without checkpoints, the exporter writes deterministic placeholder predictions and labels them as non-scientific metadata.
+
+Create an interactive Plotly HTML force-field view:
+
+```bash
+python3 scripts/visualize_force_plotly.py \
+  --input outputs/visuals/data/aspirin_frame_000_visualization.json \
+  --force-key target_forces \
+  --output outputs/visuals/force_field_interactive.html \
+  --show-rotated
+```
+
+Render a Blender still of the molecule and force arrows:
+
+```bash
+PYTHONPATH="$PWD/scripts" /Applications/Blender.app/Contents/MacOS/Blender \
+  -b --factory-startup --python-use-system-env \
+  --python scripts/render_blender_force_scene.py -- \
+  --input outputs/visuals/data/aspirin_frame_000_visualization.json \
+  --output outputs/visuals/force_scene.png
+```
+
+Render the SE(3) equivariance split-screen:
+
+```bash
+PYTHONPATH="$PWD/scripts" /Applications/Blender.app/Contents/MacOS/Blender \
+  -b --factory-startup --python-use-system-env \
+  --python scripts/render_blender_equivariance_demo.py -- \
+  --input outputs/visuals/data/aspirin_frame_000_visualization.json \
+  --output outputs/visuals/se3_equivariance_demo.png
+```
+
+Render the ground-truth vs SE3 vs PaiNN-lite comparison:
+
+```bash
+PYTHONPATH="$PWD/scripts" /Applications/Blender.app/Contents/MacOS/Blender \
+  -b --factory-startup --python-use-system-env \
+  --python scripts/render_blender_model_comparison.py -- \
+  --input outputs/visuals/data/aspirin_frame_000_visualization.json \
+  --output outputs/visuals/model_comparison_se3_painn.png
+```
+
+Render cinematic Blender animations:
+
+```bash
+PYTHONPATH="$PWD/scripts" /Applications/Blender.app/Contents/MacOS/Blender \
+  -b --factory-startup --python-use-system-env \
+  --python scripts/render_blender_force_cinematic.py -- \
+  --input outputs/visuals/data/aspirin_frame_000_visualization.json \
+  --output outputs/visuals/force_scene_cinematic.mp4 \
+  --frame-output-dir outputs/visuals/frames/force_scene_cinematic_hd \
+  --frames 240 \
+  --fps 30 \
+  --resolution-x 1920 \
+  --resolution-y 1080 \
+  --engine EEVEE \
+  --samples 64
+
+PYTHONPATH="$PWD/scripts" /Applications/Blender.app/Contents/MacOS/Blender \
+  -b --factory-startup --python-use-system-env \
+  --python scripts/render_blender_equivariance_cinematic.py -- \
+  --input outputs/visuals/data/aspirin_frame_000_visualization.json \
+  --output outputs/visuals/se3_equivariance_cinematic.mp4 \
+  --frame-output-dir outputs/visuals/frames/equivariance_cinematic_hd \
+  --frames 300 \
+  --fps 30 \
+  --resolution-x 1920 \
+  --resolution-y 1080 \
+  --engine EEVEE \
+  --samples 64
+
+PYTHONPATH="$PWD/scripts" /Applications/Blender.app/Contents/MacOS/Blender \
+  -b --factory-startup --python-use-system-env \
+  --python scripts/render_blender_model_comparison_cinematic.py -- \
+  --input outputs/visuals/data/aspirin_frame_000_visualization.json \
+  --output outputs/visuals/model_comparison_se3_painn_cinematic.mp4 \
+  --frame-output-dir outputs/visuals/frames/model_comparison_cinematic_hd \
+  --frames 240 \
+  --fps 30 \
+  --resolution-x 1920 \
+  --resolution-y 1080 \
+  --engine EEVEE \
+  --samples 64
+```
+
+Use the generated HD MP4s for presentation. Earlier fallback frame directories without the `_hd` suffix are draft assets only; they may contain short, low-resolution preview frames.
+
+If Blender cannot write MP4, pass an `_hd` frame directory and convert frames with:
+
+```bash
+ffmpeg -y -framerate 30 \
+  -i outputs/visuals/frames/equivariance_cinematic_hd/frame_%04d.png \
+  -vf "scale=1920:1080:flags=lanczos:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,format=yuv420p" \
+  -c:v libx264 -crf 14 -preset slow -movflags +faststart \
+  outputs/visuals/se3_equivariance_cinematic.mp4
+```
+
+Generate a presentation storyboard:
+
+```bash
+python3 scripts/make_visualization_storyboard.py --output outputs/visuals/storyboard.md
+```
+
+Optional dependencies:
+
+- `plotly`: preferred for Python-side HTML generation. If it is missing, `visualize_force_plotly.py` writes a CDN-backed Plotly HTML fallback.
+- Blender: optional but recommended for cinematic stills. Blender scripts do not import PyTorch and consume exported JSON only.
+
+Check Blender CLI availability:
+
+```bash
+PYTHONPATH="$PWD/scripts" /Applications/Blender.app/Contents/MacOS/Blender \
+  -b --factory-startup --python-use-system-env \
+  --python-expr "import bpy; print('OK', bpy.app.version_string)"
+```
+
+Check Blender Cycles GPU devices:
+
+```bash
+PYTHONPATH="$PWD/scripts" /Applications/Blender.app/Contents/MacOS/Blender \
+  -b --factory-startup --python-use-system-env \
+  --python-expr "import bpy; bpy.context.scene.render.engine='CYCLES'; bpy.context.scene.cycles.device='GPU'; p=bpy.context.preferences.addons['cycles'].preferences; p.refresh_devices(); print([(d.name,d.type,d.use) for d in p.devices]); print('device=', bpy.context.scene.cycles.device)"
+```
+
+Do not commit large rendered videos unless explicitly requested.
 
 This repository uses e3nn for group-theoretic primitives, while implementing the model architecture, synthetic tasks, tests, training pipeline, evaluation scripts, and ablation entry points directly.

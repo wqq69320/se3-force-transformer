@@ -1,0 +1,35 @@
+seed: 0
+device: cpu
+diagnostic_type: overfit
+output_dir: outputs/rmd17_aspirin_overfit32_tfn
+dataset:
+  name: rmd17
+  molecule: aspirin
+  path: data/rmd17/rmd17_aspirin.npz
+  max_frames: 32
+  train_size: 32
+  val_size: 32
+  test_size: 32
+  cutoff_radius: 5.0
+  split_type: train_only_overfit
+model:
+  name: tfn
+  hidden_dim: 96
+  num_layers: 3
+  radial_num_basis: 16
+  radial_hidden_dim: 96
+  output_head_init_scale: 1.0
+training:
+  mode: direct_force
+  diagnostic_type: overfit
+  diagnostic_logging: true
+  batch_size: 32
+  epochs: 120
+  lr: 0.003
+  weight_decay: 0.0
+  force_loss_weight: 900.0
+  energy_loss_weight: 0.0
+  force_scale_normalization: train_force_rms
+  force_loss_type: mse
+  huber_delta: 1.0
+  gradient_clip_norm: 10.0

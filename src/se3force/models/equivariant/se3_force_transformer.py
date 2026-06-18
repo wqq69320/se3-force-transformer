@@ -76,7 +76,7 @@ class SE3ForceTransformer(nn.Module):
             self.force_radial_basis = None
             self.force_edge_mlp = None
 
-    def forward(self, x: torch.Tensor, z: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, z: torch.Tensor, mask: torch.Tensor | None = None, edges=None, return_diagnostics: bool = False):
         B, N, _ = x.shape
         features = x.new_zeros(B, N, self.irreps_hidden.dim)
         scalar_features = self.scalar_embed(z)
@@ -85,15 +85,31 @@ class SE3ForceTransformer(nn.Module):
             width = end - start
             features[..., start:end] = scalar_features[..., offset : offset + width]
             offset += width
+        active_edges = dense_edges(x) if edges is None else edges
         for block in self.blocks:
-            features = block(x, features)
+            features = block(x, features, edges=active_edges)
         if self.force_edge_mlp is None:
-            return self.force_head(features)
+            forces = self.force_head(features)
+            force_head_type = "e3nn_linear"
+        else:
+            hi = features[active_edges.batch, active_edges.dst]
+            hj = features[active_edges.batch, active_edges.src]
+            radial = self.force_radial_basis(active_edges.distances)
+            weights = self.force_edge_mlp(torch.cat([hi, hj, radial], dim=-1))
+            force_messages = weights * active_edges.edge_vec
+            forces = aggregate_to_nodes(force_messages, active_edges) / max(1, x.shape[1] - 1)
+            force_head_type = "relative_vector_fallback"
 
-        edges = dense_edges(x)
-        hi = features[edges.batch, edges.dst]
-        hj = features[edges.batch, edges.src]
-        radial = self.force_radial_basis(edges.distances)
-        weights = self.force_edge_mlp(torch.cat([hi, hj, radial], dim=-1))
-        force_messages = weights * edges.edge_vec
-        return aggregate_to_nodes(force_messages, edges) / max(1, x.shape[1] - 1)
+        if mask is not None:
+            forces = forces * mask.unsqueeze(-1)
+        if not return_diagnostics:
+            return forces
+        diagnostics = {
+            "last_hidden_norm": features.norm(dim=-1).mean(),
+            "force_head_output_norm": forces.norm(dim=-1).mean(),
+            "force_final_activation_norm": features.norm(dim=-1).mean(),
+            "message_norm_mean": features.norm(dim=-1).mean(),
+            "edge_message_norm_mean": forces.norm(dim=-1).mean(),
+            "force_head_type": force_head_type,
+        }
+        return forces, diagnostics

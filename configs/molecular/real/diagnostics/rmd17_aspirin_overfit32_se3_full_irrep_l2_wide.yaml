@@ -1,0 +1,44 @@
+seed: 0
+device: cpu
+diagnostic_type: overfit
+output_dir: outputs/rmd17_aspirin_overfit32_se3_full_irrep_l2_wide
+dataset:
+  name: rmd17
+  molecule: aspirin
+  path: data/rmd17/rmd17_aspirin.npz
+  max_frames: 32
+  train_size: 32
+  val_size: 32
+  test_size: 32
+  cutoff_radius: 5.0
+  split_type: train_only_overfit
+model:
+  name: se3_full_l2
+  graph_mode: cutoff
+  lmax: 2
+  channels_by_l:
+    0: 128
+    1: 32
+    2: 16
+  atom_embedding_dim: 24
+  num_layers: 3
+  num_heads: 2
+  num_query_channels: 12
+  radial_num_basis: 24
+  radial_hidden_dim: 160
+  output_head_init_scale: 1.0
+  force_output_scale: 1.0
+training:
+  mode: direct_force
+  diagnostic_type: overfit
+  diagnostic_logging: true
+  batch_size: 32
+  epochs: 300
+  lr: 0.003
+  weight_decay: 0.0
+  force_loss_weight: 1.0
+  energy_loss_weight: 0.0
+  force_scale_normalization: train_force_rms
+  force_loss_type: vector_l2
+  huber_delta: 10.0
+  gradient_clip_norm: 100.0

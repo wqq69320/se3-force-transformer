@@ -1,0 +1,45 @@
+seed: 0
+device: cpu
+diagnostic_type: overfit
+output_dir: outputs/rmd17_aspirin_overfit32_global_coeff
+dataset:
+  name: rmd17
+  molecule: aspirin
+  path: data/rmd17/rmd17_aspirin.npz
+  max_frames: 32
+  train_size: 32
+  val_size: 32
+  test_size: 32
+  cutoff_radius: 5.0
+  split_type: train_only_overfit
+model:
+  name: global_coeff
+  max_atoms: 32
+  graph_mode: full
+  hidden_dim: 512
+  num_layers: 4
+  global_context_dim: 256
+  atom_embedding_dim: 32
+  pair_embedding_dim: 32
+  radial_num_basis: 32
+  edge_mlp_hidden_dim: 512
+  edge_mlp_layers: 2
+  force_output_scale: 1.0
+  use_prototype_memory: true
+  prototype_count: 32
+  prototype_assignment: nearest
+  prototype_coeff_init_scale: 0.0
+training:
+  mode: direct_force
+  diagnostic_type: equivariant_global_memorizer
+  diagnostic_logging: true
+  batch_size: 32
+  epochs: 300
+  lr: 0.003
+  weight_decay: 0.0
+  force_loss_weight: 1.0
+  energy_loss_weight: 0.0
+  force_scale_normalization: train_force_rms
+  force_loss_type: mse
+  huber_delta: 10.0
+  gradient_clip_norm: 100.0

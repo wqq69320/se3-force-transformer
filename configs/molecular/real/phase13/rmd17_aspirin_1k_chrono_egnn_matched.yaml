@@ -1,0 +1,36 @@
+seed: 0
+device: cpu
+diagnostic_type: chronological_matched_egnn_matched
+output_dir: outputs/rmd17_aspirin_global_vs_local_1k_chrono_phase13/egnn_matched
+dataset:
+  name: rmd17
+  molecule: aspirin
+  path: data/rmd17/rmd17_aspirin.npz
+  max_frames: 1000
+  train_size: 700
+  val_size: 150
+  test_size: 150
+  cutoff_radius: 5.0
+  split_type: chronological
+model:
+  name: egnn
+  graph_mode: cutoff
+  hidden_dim: 96
+  num_layers: 3
+  radial_num_basis: 16
+  radial_hidden_dim: 96
+training:
+  mode: direct_force
+  diagnostic_logging: true
+  batch_size: 32
+  epochs: 50
+  lr: 0.001
+  weight_decay: 0.0
+  force_loss_weight: 1.0
+  energy_loss_weight: 0.0
+  force_scale_normalization: train_force_rms
+  force_loss_type: mse
+  huber_delta: 10.0
+  gradient_clip_norm: 100.0
+  max_steps_per_epoch: 8
+  diagnostic_type: chronological_matched_egnn_matched

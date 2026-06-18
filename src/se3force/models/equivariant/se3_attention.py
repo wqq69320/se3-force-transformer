@@ -36,8 +36,8 @@ class SE3AttentionHead(nn.Module):
         self.dropout = nn.Dropout(attention_dropout)
         self.num_query_channels = int(num_query_channels)
 
-    def forward(self, x: torch.Tensor, features: torch.Tensor) -> torch.Tensor:
-        edges = dense_edges(x)
+    def forward(self, x: torch.Tensor, features: torch.Tensor, edges=None) -> torch.Tensor:
+        edges = dense_edges(x) if edges is None else edges
         q = self.query(features)
         sh = o3.spherical_harmonics(self.irreps_sh, edges.edge_vec, normalize=True, normalization="component")
         src_features = features[edges.batch, edges.src]
@@ -86,5 +86,5 @@ class SE3MultiHeadAttention(nn.Module):
         concat_irreps = o3.Irreps("+".join(str(self.irreps_value) for _ in range(num_heads)))
         self.mix = o3.Linear(concat_irreps, self.irreps_out)
 
-    def forward(self, x: torch.Tensor, features: torch.Tensor) -> torch.Tensor:
-        return self.mix(torch.cat([head(x, features) for head in self.heads], dim=-1))
+    def forward(self, x: torch.Tensor, features: torch.Tensor, edges=None) -> torch.Tensor:
+        return self.mix(torch.cat([head(x, features, edges=edges) for head in self.heads], dim=-1))

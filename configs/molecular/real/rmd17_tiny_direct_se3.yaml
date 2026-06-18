@@ -1,0 +1,30 @@
+seed: 0
+device: cpu
+output_dir: outputs/rmd17_tiny_direct_se3
+dataset:
+  name: rmd17
+  molecule: aspirin
+  path: data/rmd17/aspirin.npz
+  train_size: 70
+  val_size: 15
+  test_size: 15
+  cutoff_radius: 5.0
+  split_type: random
+model:
+  name: se3_transformer
+  lmax: 2
+  channels_by_l:
+    0: 64
+  num_layers: 2
+  radial_num_basis: 10
+  radial_hidden_dim: 48
+training:
+  mode: direct_force
+  batch_size: 4
+  epochs: 2
+  lr: 0.001
+  weight_decay: 0.0001
+  lambda_force: 1.0
+  lambda_energy: 0.0
+  gradient_clip: 1.0
+  max_steps_per_epoch: 4

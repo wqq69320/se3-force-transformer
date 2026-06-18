@@ -62,6 +62,7 @@ def build_molecular_graph(
     cutoff_radius: float | None = None,
     max_neighbors: int | None = None,
     exclude_self: bool = True,
+    graph_mode: str = "cutoff",
 ) -> MolecularGraph:
     """Build directed local-index edges for padded molecular batches."""
     start = time.perf_counter()
@@ -69,7 +70,10 @@ def build_molecular_graph(
     device = pos.device
     if mask is None:
         mask = torch.ones(B, N, dtype=torch.bool, device=device)
-    cutoff = float(cutoff_radius) if cutoff_radius is not None else None
+    graph_mode = str(graph_mode).lower()
+    if graph_mode not in {"cutoff", "full"}:
+        raise ValueError(f"unknown graph_mode: {graph_mode}")
+    cutoff = None if graph_mode == "full" else (float(cutoff_radius) if cutoff_radius is not None else None)
     batch_chunks = []
     src_chunks = []
     dst_chunks = []
@@ -85,7 +89,7 @@ def build_molecular_graph(
             keep.fill_diagonal_(False)
         if cutoff is not None:
             keep &= dmat <= cutoff
-        if max_neighbors is not None and max_neighbors > 0:
+        if graph_mode != "full" and max_neighbors is not None and max_neighbors > 0:
             limited = torch.zeros_like(keep)
             for dst_local in range(valid.numel()):
                 candidates = torch.nonzero(keep[dst_local], as_tuple=False).flatten()

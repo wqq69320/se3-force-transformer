@@ -50,7 +50,7 @@ class SE3TransformerBlock(nn.Module):
         self.activation = EquivariantGate(self.irreps) if use_gate else nn.Identity()
         self.ff2 = o3.Linear(self.irreps, self.irreps)
 
-    def forward(self, x, features):
-        features = features + self.message(x, self.norm1(features))
+    def forward(self, x, features, edges=None):
+        features = features + self.message(x, self.norm1(features), edges=edges)
         features = features + self.ff2(self.activation(self.ff1(self.norm2(features))))
         return features

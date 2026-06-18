@@ -1,0 +1,32 @@
+seed: 0
+device: cpu
+output_dir: outputs/rmd17_aspirin_1k_direct_tfn_norm_epoch20
+dataset:
+  name: rmd17
+  molecule: aspirin
+  path: data/rmd17/rmd17_aspirin.npz
+  max_frames: 1000
+  train_size: 700
+  val_size: 150
+  test_size: 150
+  cutoff_radius: 5.0
+  split_type: chronological
+model:
+  name: tfn
+  hidden_dim: 96
+  num_layers: 3
+  radial_num_basis: 16
+  radial_hidden_dim: 96
+training:
+  mode: direct_force
+  batch_size: 8
+  epochs: 20
+  lr: 0.001
+  weight_decay: 0.0001
+  force_loss_weight: 1.0
+  energy_loss_weight: 0.0
+  force_scale_normalization: train_force_rms
+  force_loss_type: mse
+  huber_delta: 1.0
+  gradient_clip: 1.0
+  max_steps_per_epoch: 8

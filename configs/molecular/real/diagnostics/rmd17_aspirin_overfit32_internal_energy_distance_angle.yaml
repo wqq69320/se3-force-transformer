@@ -1,0 +1,37 @@
+seed: 0
+device: cpu
+diagnostic_type: overfit
+output_dir: outputs/rmd17_aspirin_overfit32_internal_energy_distance_angle
+dataset:
+  name: rmd17
+  molecule: aspirin
+  path: data/rmd17/rmd17_aspirin.npz
+  max_frames: 32
+  train_size: 32
+  val_size: 32
+  test_size: 32
+  cutoff_radius: 5.0
+  split_type: train_only_overfit
+model:
+  name: internal_energy
+  max_atoms: 32
+  graph_mode: full
+  hidden_dim: 512
+  num_layers: 4
+  atom_embedding_dim: 24
+  use_angles: true
+  force_output_scale: 1.0
+training:
+  mode: direct_force
+  diagnostic_type: equivariant_internal_energy_memorizer
+  diagnostic_logging: true
+  batch_size: 32
+  epochs: 300
+  lr: 0.003
+  weight_decay: 0.0
+  force_loss_weight: 1.0
+  energy_loss_weight: 0.0
+  force_scale_normalization: train_force_rms
+  force_loss_type: mse
+  huber_delta: 10.0
+  gradient_clip_norm: 100.0

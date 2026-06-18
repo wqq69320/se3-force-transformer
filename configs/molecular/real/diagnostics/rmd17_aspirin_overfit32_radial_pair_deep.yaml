@@ -1,0 +1,40 @@
+seed: 0
+device: cpu
+diagnostic_type: overfit
+output_dir: outputs/rmd17_aspirin_overfit32_radial_pair_deep
+dataset:
+  name: rmd17
+  molecule: aspirin
+  path: data/rmd17/rmd17_aspirin.npz
+  max_frames: 32
+  train_size: 32
+  val_size: 32
+  test_size: 32
+  cutoff_radius: 5.0
+  split_type: train_only_overfit
+model:
+  name: radial_pair
+  graph_mode: cutoff
+  hidden_dim: 192
+  radial_num_basis: 32
+  radial_hidden_dim: 320
+  edge_mlp_hidden_dim: 320
+  edge_mlp_layers: 6
+  use_atom_pair_embedding: true
+  pair_embedding_dim: 32
+  pair_residual_terms: true
+  force_output_scale: 1.0
+training:
+  mode: direct_force
+  diagnostic_type: overfit
+  diagnostic_logging: true
+  batch_size: 32
+  epochs: 300
+  lr: 0.003
+  weight_decay: 0.0
+  force_loss_weight: 1.0
+  energy_loss_weight: 0.0
+  force_scale_normalization: train_force_rms
+  force_loss_type: vector_l2
+  huber_delta: 10.0
+  gradient_clip_norm: 100.0
